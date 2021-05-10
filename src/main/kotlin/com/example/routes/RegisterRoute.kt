@@ -6,6 +6,7 @@ import com.example.database.query.registerCustomer
 import com.example.models.Customers
 import com.example.requests.RegisterRequest
 import com.example.responses.KMobileResponse
+import com.example.responses.KMobileResponseWithData
 import com.example.responses.getResponse
 import io.ktor.application.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -21,7 +22,7 @@ fun Route.registerCustomerRoute() {
             val request = try {
                 call.receive<RegisterRequest>()
             } catch (e: ContentTransformationException) {
-                call.respond(BadRequest, getResponse(false, "Invalid request json $e"))
+                call.respond(BadRequest, KMobileResponseWithData(false, "Invalid request json $e", "0"))
                 return@post
             }
             val customer = Customers(
@@ -36,21 +37,24 @@ fun Route.registerCustomerRoute() {
                 checkIfCustomerExists(customer.email).let {
                     if (it > 0){
                         createShoppingCartForCustomer(it)
-                        call.respond( OK, KMobileResponse(
+                        call.respond( OK, KMobileResponseWithData(
                             successful = true,
-                            message = "user Added successfully"
+                            message = "user: ${request.name} Added successfully, Please login",
+                            data = it.toString()
                         ))
                     } else {
-                        call.respond( OK, KMobileResponse(
+                        call.respond( OK, KMobileResponseWithData(
                             successful = false,
-                            message = "Unknown Error occured"
+                            message = "Unknown Error occured",
+                            data = "0"
                         ))
                     }
                 }
             } else {
-                call.respond(OK, KMobileResponse(
+                call.respond(OK, KMobileResponseWithData(
                     successful = false,
-                    message = "User Already Exists"
+                    message = "User Already Exists",
+                    data = "0"
                 ))
             }
         }

@@ -2,6 +2,7 @@ package com.example.routes
 
 import com.example.database.query.getAllProducts
 import com.example.responses.KMobileResponse
+import com.example.responses.KMobileResponseWithData
 import com.example.responses.getAnyRes
 import com.example.responses.getResponse
 import io.ktor.application.*
@@ -19,10 +20,14 @@ fun Route.getAllProductsRoute() {
             val brand = call.parameters["brand"]
             val allProducts = async { getAllProducts(brand) }
             allProducts.await().run {
-                if (this.isNotEmpty()) {
-                    call.respond(OK, getAnyRes(true, this))
-                } else {
-                    call.respond(OK, KMobileResponse(false, "Unknown error occured"))
+                try {
+                    if (this.isNotEmpty()) {
+                        call.respond(OK, KMobileResponseWithData(true,"Success", this))
+                    } else {
+                        call.respond(OK, KMobileResponseWithData(false, "Unknown error occurred", this))
+                    }
+                } catch (e: Exception){
+                    call.respond(OK, KMobileResponseWithData(false, e.toString(), null))
                 }
             }
 

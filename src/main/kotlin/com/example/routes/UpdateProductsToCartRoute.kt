@@ -9,7 +9,7 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 
-fun Route.addProductsToCartRoute() {
+fun Route.updateProductsToCartRoute() {
     route("/update_products_to_cart") {
         post {
             val request = try {

@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 
@@ -41,6 +42,51 @@ fun removeShoppingCart(cartId: Int) {
             ShoppingCart.cart_id eq cartId
         }
     }
+}
+
+fun addProductToCart(productId: Int, customerId: Int, price: Int): Boolean {
+    var done = false
+    transaction {
+        runBlocking {
+            newSuspendedTransaction {
+                CartProducts.insert {
+                    it[cart_id] = customerId
+                    it[product_id] = productId
+                    it[price_of_products] = price
+                    it[no_of_products] = 1
+                }
+                val formerShoppingCart = ShoppingCart.selectAll().having{
+                    ShoppingCart.cart_id eq customerId
+                }.last()
+                ShoppingCart.update( { ShoppingCart.cart_id eq customerId } ) {
+                    it[total_amount] = formerShoppingCart[total_amount] - price
+                }
+                done = true
+            }
+        }
+    }
+    return done
+}
+
+fun removeProductFromCart(productId: Int, customerID: Int, price: Int): Boolean {
+    var done = false
+    transaction {
+        runBlocking {
+            newSuspendedTransaction {
+                CartProducts.deleteWhere(limit = 1){
+                    CartProducts.cart_id eq customerID and(CartProducts.product_id eq productId)
+                }
+                val formerShoppingCart = ShoppingCart.selectAll().having{
+                    ShoppingCart.cart_id eq customerID
+                }.last()
+                ShoppingCart.update( { ShoppingCart.cart_id eq customerID } ) {
+                    it[total_amount] = formerShoppingCart[total_amount] - price
+                }
+                done = true
+            }
+        }
+    }
+    return done
 }
 
 fun updateProductsToCart(productAndQuantityList: ProductAndQuantityList): Int {
