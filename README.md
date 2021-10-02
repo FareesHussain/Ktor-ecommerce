@@ -1,12 +1,12 @@
 ### K-Mobile Database using [Ktor](https://ktor.io/)
 
-#### Architechture & Codebase
 
 
 
-Create User & Database
 
-#### APIs
+
+
+#### API documentation
 
 - Register Customer (POST -> /register_customer)
     - Input 
